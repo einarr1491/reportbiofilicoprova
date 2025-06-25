@@ -157,6 +157,33 @@
             .flex-grow.grid { grid-template-columns: 1fr !important; }
             .client-section .grid { grid-template-columns: 1fr; }
         }
+
+        /* Stili per la stampa */
+        @media print {
+            body, #presentation-container {
+                background-color: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            #reset-btn, #ai-modal, #print-btn-container, .ai-button {
+                display: none !important;
+            }
+            .section {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                margin-bottom: 0 !important;
+                padding: 2cm 1.5cm;
+                page-break-inside: avoid;
+                page-break-after: always;
+            }
+            .section:last-of-type {
+                page-break-after: avoid;
+            }
+            .cover-page {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
     </style>
 </head>
 <body>
@@ -166,7 +193,7 @@
             <div class="section cover-page">
                 <div class="header-info flex justify-between items-start">
                     <div id="studio-name" contenteditable="true" class="font-semibold text-xl">[NOME STUDIO]</div>
-                    <span class="text-md opacity-90">stefanobocci.com</span>
+                    <a href="https://www.stefanobocci.com" target="_blank" rel="noopener noreferrer" class="text-md opacity-90 hover:opacity-100 transition">stefanobocci.com</a>
                 </div>
                 <div class="cover-content flex-grow flex flex-col justify-center">
                     <h1 class="cover-title">BIOPHILIC<br>DISCOVERY:</h1>
@@ -264,7 +291,7 @@
                      <div class="recommendation-item">
                         <div class="flex justify-between items-start mb-2">
                             <h3 class="text-xl font-semibold text-green-800 flex-grow pr-4" contenteditable="true" id="qw3-title">Suoni Naturali</h3>
-                            <select class="priority-select" id="qw3-priority-select"><option>Media</option><option>Alta</option><option>Bassa</option></select>
+                            <select class="priority-select" id="qw3-priority-select"><option>Alta</option><option>Media</option><option>Bassa</option></select>
                         </div>
                         <p class="rec-description" contenteditable="true" id="qw3-desc">Installazione piccola fontana o sound system con suoni naturali.</p>
                          <button class="ai-button" data-type="quick-win">✨ Espandi Dettagli</button>
@@ -325,6 +352,21 @@
                      </div>
                  </div>
             </div>
+            
+            <!-- SEZIONE 7: STAMPA -->
+            <div class="section" id="print-section">
+                <div class="page-header">
+                    <h1 class="page-title">Stampa o Salva in PDF</h1>
+                    <p class="page-subtitle">Utilizza la funzione di stampa del tuo browser per salvare una copia di questo report in formato PDF.</p>
+                </div>
+                <div class="text-center mt-8" id="print-btn-container">
+                    <button id="print-btn" class="bg-green-700 text-white font-bold py-4 px-8 rounded-lg text-xl hover:bg-green-800 transition shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        Stampa Report
+                    </button>
+                    <p class="text-gray-500 mt-4 text-sm">Suggerimento: Nella finestra di dialogo di stampa, scegli "Salva come PDF" come destinazione.</p>
+                </div>
+            </div>
     </div>
     
     <button id="reset-btn" title="Reset Dati"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg></button>
@@ -334,6 +376,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             // === ELEMENTI DOM ===
             const resetBtn = document.getElementById('reset-btn');
+            const printBtn = document.getElementById('print-btn');
             const editableElements = document.querySelectorAll('[contenteditable="true"]');
             const prioritySelects = document.querySelectorAll('.priority-select');
             const scoreCircle = document.getElementById('score-circle');
@@ -379,6 +422,11 @@
                     localStorage.removeItem('biophilicReportData');
                     location.reload();
                 }
+            });
+
+            // === LOGICA STAMPA ===
+            printBtn.addEventListener('click', () => {
+                window.print();
             });
 
             // === LOGICA DINAMICA SPECIFICA ===
@@ -462,4 +510,4 @@
         });
     </script>
 </body>
-</ht
+</html>

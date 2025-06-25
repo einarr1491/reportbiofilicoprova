@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Biofilico Interattivo e Compilabile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Stili di base e importazione font */
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #111827; /* Sfondo scuro per far risaltare la presentazione */
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Contenitore principale per forzare il formato 16:9 */
+        #presentation-container {
+            width: 100%;
+            max-width: 1420px;
+            background-color: #000;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centra i controlli orizzontalmente */
+        }
+        
+        .aspect-ratio-box {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* Padding top per un aspect ratio 16:9 (9 / 16 = 0.5625) */
+            height: 0;
+        }
+
+        /* Stile per il carosello delle slide */
+        #carousel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            perspective: 1500px;
+        }
+
+        /* Stile base delle pagine/slide */
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            padding: 3rem 4rem;
+            background: white;
+            color: #2d2d2d;
+            overflow-y: auto;
+            transition: transform 0.7s ease-in-out, opacity 0.7s ease-in-out;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            opacity: 0;
+            transform: translateX(100%) scale(0.8);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .page.active {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+            z-index: 10;
+        }
+
+        .page.prev {
+            transform: translateX(-100%) scale(0.8);
+            opacity: 0;
+        }
+
+        /* Stili per elementi editabili */
+        [contenteditable="true"] {
+            transition: all 0.3s ease;
+            padding: 2px 4px;
+            border-radius: 4px;
+            outline: 1px solid transparent;
+        }
+        [contenteditable="true"]:hover {
+            background-color: #f0f4f0;
+            outline: 1px dashed #4a7c59;
+        }
+        [contenteditable="true"]:focus {
+            background-color: #eaf2ea;
+            outline: 2px solid #4a7c59;
+            box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.2);
+        }
+
+        /* Stili specifici per la copertina */
+        .cover-page {
+            background: linear-gradient(rgba(45, 75, 45, 0.85), rgba(45, 75, 45, 0.85)), url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect fill="%23f0f4f0" width="1200" height="800"/><path fill="%234a7c59" d="M0,400 Q300,200 600,400 T1200,400 L1200,800 L0,800 Z"/></svg>');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            justify-content: space-between;
+        }
+         .cover-page [contenteditable="true"]:hover { background-color: rgba(255,255,255,0.1); }
+         .cover-page [contenteditable="true"]:focus { background-color: rgba(255,255,255,0.2); outline-color: #a7f3d0; }
+
+        /* Header e Titoli */
+        .page-header { margin-bottom: 2rem; }
+        .page-title { font-size: 2.8rem; font-weight: 300; color: #2d4b2d; letter-spacing: -1px; margin-bottom: 0.5rem; }
+        .page-subtitle { font-size: 1.1rem; color: #666; font-weight: 300; letter-spacing: 0.5px; }
+
+        /* Controlli di navigazione */
+        #navigation-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 20;
+            padding: 20px 0; /* Aggiunge spazio verticale per i controlli */
+        }
+
+        .nav-button {
+            background-color: rgba(255, 255, 255, 0.9); border: 1px solid #4b5563; color: #1f2937;
+            width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s ease;
+        }
+        .nav-button:hover { background-color: #4a7c59; color: white; }
+        .nav-button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; background-color: #9ca3af; }
+
+        #page-indicator {
+            background-color: rgba(255, 255, 255, 0.9); padding: 0.5rem 1.5rem; border-radius: 20px;
+            font-weight: 500; color: #1f2937; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        /* Layout specifici */
+        .cover-title { font-size: 4.5rem; font-weight: 300; line-height: 1.1; margin-bottom: 2rem; letter-spacing: -1px; }
+        .cover-subtitle { font-size: 1.4rem; font-weight: 300; opacity: 0.9; letter-spacing: 2px; text-transform: uppercase; }
+        .score-section { background: #f8faf8; border-radius: 16px; padding: 2rem; text-align: center; margin: 1.5rem 0; }
+        .score-display { display: flex; align-items: center; justify-content: center; gap: 2rem; flex-wrap: wrap; }
+        #score-circle { width: 140px; height: 140px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.5s ease; }
+        #score-circle::before { content: ''; width: 100px; height: 100px; border-radius: 50%; background: white; position: absolute; }
+        .score-number { font-size: 2.5rem; font-weight: 700; color: #2d4b2d; z-index: 1; }
+        .score-label { font-size: 1.8rem; font-weight: 600; color: #2d4b2d; }
+        .numbered-section { display: flex; align-items: flex-start; margin-bottom: 1.5rem; gap: 1.5rem; }
+        .number-badge { background: #4a7c59; color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; }
+        .content-title { font-size: 1.3rem; font-weight: 600; color: #2d2d2d; margin-bottom: 0.5rem; }
+        .content-description { color: #666; line-height: 1.6; font-size: 1rem; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .metric-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; text-align: center; }
+        .recommendation-item { display: flex; flex-direction: column; background: #f8faf8; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; }
+        .rec-description { flex-grow: 1; }
+        
+        /* --- NUOVO: Stile per il badge di priorità --- */
+        .priority-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0; /* Impedisce al badge di rimpicciolirsi */
+            margin-left: 1rem; /* Aggiunge spazio tra titolo e badge */
+            transition: background-color 0.3s ease;
+        }
+
+        /* Bottone Reset Dati */
+        #reset-btn {
+             background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca;
+             padding: 0.5rem 1rem; border-radius: 20px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;
+        }
+        #reset-btn:hover { background-color: #ef4444; color: white; }
+
+        /* Stili Modale AI */
+        #ai-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        #ai-modal.visible { opacity: 1; visibility: visible; }
+        .modal-content { background-color: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; position: relative; transform: scale(0.95); transition: transform 0.3s ease; }
+        #ai-modal.visible .modal-content { transform: scale(1); }
+        .modal-close-btn { position: absolute; top: 1rem; right: 1rem; background: #f3f4f6; border-radius: 50%; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; cursor: pointer; border: none; }
+        .modal-title { font-size: 1.5rem; font-weight: 600; color: #2d4b2d; margin-bottom: 1rem; }
+        .modal-body { color: #4b5563; line-height: 1.7; }
+        .modal-body h4 { font-weight: 600; color: #2d4b2d; margin-top: 1rem; margin-bottom: 0.5rem; }
+        .modal-body ul { list-style-type: disc; padding-left: 1.5rem; }
+        .ai-button { background-color: #eaf2ea; color: #2d4b2d; border: 1px solid #c1d4c3; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; margin-top: 1rem; align-self: flex-start; }
+        .ai-button:hover { background-color: #2d4b2d; color: white; }
+        .loader { width: 48px; height: 48px; border: 5px solid #4a7c59; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="presentation-container">
+        <div class="aspect-ratio-box">
+            <div id="carousel">
+                <!-- SLIDE 1: COVER PAGE -->
+                <div class="page cover-page active">
+                    <div class="header-info flex justify-between items-start">
+                        <div id="studio-name" contenteditable="true" class="font-semibold text-xl">[NOME STUDIO]</div>
+                        <div id="website-url" contenteditable="true" class="text-md opacity-90">www.studiobiofilico.com</div>
+                    </div>
+                    <div class="cover-content flex-grow flex flex-col justify-center">
+                        <h1 class="cover-title">BIOPHILIC<br>DISCOVERY:</h1>
+                        <p id="cover-subtitle" contenteditable="true" class="cover-subtitle">NEUROSCIENZE, BENESSERE, ARCHITETTURA</p>
+                    </div>
+                    <div class="client-section border-t border-white/30 pt-6">
+                        <div class="grid grid-cols-2 gap-8 text-lg">
+                            <div>
+                                <strong>Cliente:</strong> <span id="client-name" contenteditable="true">[Nome Cliente]</span><br>
+                                <strong>Progetto:</strong> <span id="project-name" contenteditable="true">[Nome Progetto]</span>
+                            </div>
+                            <div>
+                                <strong>Data:</strong> <span id="report-date" contenteditable="true">[Data Report]</span><br>
+                                <strong>Consulente:</strong> <span id="consultant-name" contenteditable="true">[Nome Architetto]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 2: EXECUTIVE SUMMARY -->
+                <div class="page">
+                    <div class="page-header">
+                        <h1 class="page-title">Executive Summary</h1>
+                        <p class="page-subtitle" contenteditable="true" id="summary-subtitle">Sintesi delle principali scoperte e raccomandazioni strategiche</p>
+                    </div>
+                    <div class="flex-grow grid grid-cols-2 gap-12 items-center">
+                        <div>
+                            <div class="score-section">
+                                <div class="score-display">
+                                    <div id="score-circle">
+                                        <div id="biophilic-score" contenteditable="true" class="score-number">60</div>
+                                    </div>
+                                    <div class="text-left">
+                                        <div class="score-label">BIOPHILIC SCORE</div>
+                                        <div id="score-classification" contenteditable="true" class="text-xl text-green-700 font-medium">Classificazione: Biofilico Base</div>
+                                        <div id="score-potential" contenteditable="true" class="text-gray-600">Potenziale: +25 punti con interventi mirati</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metrics-grid">
+                                <div class="metric-card"><div class="font-semibold text-lg text-green-800">Stress Reduction</div><div contenteditable="true" id="metric-stress">Previsto 25-35% con interventi completi</div></div>
+                                <div class="metric-card"><div class="font-semibold text-lg text-green-800">Productivity</div><div contenteditable="true" id="metric-productivity">Incremento 15-20% concentrazione</div></div>
+                                <div class="metric-card"><div class="font-semibold text-lg text-green-800">ROI Stimato</div><div contenteditable="true" id="metric-roi">€3.5k-5.2k benefici annui</div></div>
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="numbered-section"><div class="number-badge">1</div><div><div class="content-title">Punti di Forza Identificati</div><div class="content-description" contenteditable="true" id="summary-strengths">Excellent natural light exposure nelle aree principali con buona circolazione aria. Il layout attuale supporta già alcune dinamiche biofiliche fondamentali.</div></div></div>
+                            <div class="numbered-section"><div class="number-badge">2</div><div><div class="content-title">Aree di Miglioramento Prioritarie</div><div class="content-description" contenteditable="true" id="summary-improvements">Limited vegetation integration e poor acoustic design negli spazi di lavoro. Mancanza di elementi acqua per sound masking e regolazione umidità.</div></div></div>
+                            <div class="numbered-section"><div class="number-badge">3</div><div><div class="content-title">Opportunità Quick Wins</div><div class="content-description" contenteditable="true" id="summary-quickwins">5 interventi immediati identificati per impatto significativo con budget <€2.500 totale. Implementation possibile entro 2-3 settimane.</div></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 3: BIOPHILIC SCORE ANALYSIS -->
+                 <div class="page">
+                    <div class="page-header"><h1 class="page-title">Biophilic Score Analysis</h1><p class="page-subtitle" contenteditable="true" id="analysis-subtitle">Breakdown dettagliato delle 4 categorie di performance biofilica</p></div>
+                    <div class="flex-grow grid grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <div class="numbered-section"><div class="number-badge">1</div><div><div class="content-title" contenteditable="true" id="analysis1-title">Connessione Diretta con la Natura (35%)</div><div class="content-description" contenteditable="true" id="analysis1-desc"><strong>Score attuale: 18/35 punti</strong>. Valutazione presenza fisica elementi naturali: luce, verde, aria, acqua, calore.</div></div></div>
+                             <div class="numbered-section"><div class="number-badge">2</div><div><div class="content-title" contenteditable="true" id="analysis2-title">Connessione Indiretta (25%)</div><div class="content-description" contenteditable="true" id="analysis2-desc"><strong>Score attuale: 15/25 punti</strong>. Materiali naturali, pattern biomorfici, palette cromatica naturale.</div></div></div>
+                             <div class="numbered-section"><div class="number-badge">3</div><div><div class="content-title" contenteditable="true" id="analysis3-title">Esperienza Spaziale (25%)</div><div class="content-description" contenteditable="true" id="analysis3-desc"><strong>Score attuale: 16/25 punti</strong>. Prospect & refuge, mystery, variabilità sensoriale per engagement naturale.</div></div></div>
+                             <div class="numbered-section"><div class="number-badge">4</div><div><div class="content-title" contenteditable="true" id="analysis4-title">Benessere Misurabile (15%)</div><div class="content-description" contenteditable="true" id="analysis4-desc"><strong>Score attuale: 11/15 punti</strong>. Qualità sonno, produttività, riduzione stress attraverso design biofilico.</div></div></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="metric-card"><div class="font-semibold text-green-800">Luce Naturale</div><div class="text-2xl font-bold my-2" contenteditable="true" id="score-light">7/10</div><div class="text-sm text-gray-500" contenteditable="true" id="desc-light">Buona esposizione, manca controllo circadiano</div></div>
+                            <div class="metric-card"><div class="font-semibold text-green-800">Verde Integrato</div><div class="text-2xl font-bold my-2" contenteditable="true" id="score-green">4/8</div><div class="text-sm text-gray-500" contenteditable="true" id="desc-green">Presenza limitata, scarsa biodiversità</div></div>
+                            <div class="metric-card"><div class="font-semibold text-green-800">Elementi Acqua</div><div class="text-2xl font-bold my-2" contenteditable="true" id="score-water">2/5</div><div class="text-sm text-gray-500" contenteditable="true" id="desc-water">Solo funzionale, manca aspetto biofilico</div></div>
+                            <div class="metric-card"><div class="font-semibold text-green-800">Calore Naturale</div><div class="text-2xl font-bold my-2" contenteditable="true" id="score-heat">0/5</div><div class="text-sm text-gray-500" contenteditable="true" id="desc-heat">Assenza completa elementi termici naturali</div></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- SLIDE 4: QUICK WINS -->
+                <div class="page">
+                    <div class="page-header"><h1 class="page-title">Quick Wins Strategy</h1><p class="page-subtitle" contenteditable="true" id="quickwins-subtitle">Interventi immediati per massimo impatto con investimento ottimizzato</p></div>
+                    <div class="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Card 1 -->
+                        <div class="recommendation-item">
+                            <!-- MODIFICA: Header per titolo e badge -->
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-semibold text-green-800" contenteditable="true" id="qw1-title">Air-Purifying Plant Integration</h3>
+                                <div class="priority-badge" contenteditable="true" id="qw1-priority">Alta</div>
+                            </div>
+                            <p class="rec-description" contenteditable="true" id="qw1-desc">Introduzione strategica di 5-7 piante purificanti aria (Sansevieria, Pothos, Peace Lily) nelle aree con maggior permanenza.</p>
+                            <button class="ai-button" data-type="quick-win">✨ Espandi Dettagli</button>
+                            <div class="grid grid-cols-3 gap-2 pt-4 mt-4 border-t"><div class="text-center"><div class="text-xs text-gray-500">INVESTMENT</div><div class="font-bold text-green-700" contenteditable="true" id="qw1-cost">€350-500</div></div><div class="text-center"><div class="text-xs text-gray-500">IMPACT</div><div class="font-bold text-green-700" contenteditable="true" id="qw1-impact">+3 Score</div></div><div class="text-center"><div class="text-xs text-gray-500">TIMELINE</div><div class="font-bold text-green-700" contenteditable="true" id="qw1-time">1 settimana</div></div></div>
+                        </div>
+                        <!-- Card 2 -->
+                        <div class="recommendation-item">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-semibold text-green-800" contenteditable="true" id="qw2-title">Circadian Lighting Upgrade</h3>
+                                <div class="priority-badge" contenteditable="true" id="qw2-priority">Alta</div>
+                            </div>
+                            <p class="rec-description" contenteditable="true" id="qw2-desc">Sostituzione lampade principali con LED programmabili 2700K-5000K per supportare ritmi circadiani e migliorare qualità del sonno.</p>
+                             <button class="ai-button" data-type="quick-win">✨ Espandi Dettagli</button>
+                            <div class="grid grid-cols-3 gap-2 pt-4 mt-4 border-t"><div class="text-center"><div class="text-xs text-gray-500">INVESTMENT</div><div class="font-bold text-green-700" contenteditable="true" id="qw2-cost">€800-1.200</div></div><div class="text-center"><div class="text-xs text-gray-500">IMPACT</div><div class="font-bold text-green-700" contenteditable="true" id="qw2-impact">+4 Score</div></div><div class="text-center"><div class="text-xs text-gray-500">TIMELINE</div><div class="font-bold text-green-700" contenteditable="true" id="qw2-time">2 settimane</div></div></div>
+                        </div>
+                        <!-- Card 3 -->
+                         <div class="recommendation-item">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-semibold text-green-800" contenteditable="true" id="qw3-title">Natural Sound Masking</h3>
+                                <div class="priority-badge" contenteditable="true" id="qw3-priority">Media</div>
+                            </div>
+                            <p class="rec-description" contenteditable="true" id="qw3-desc">Installazione piccola fontana d'acqua o sound system con nature sounds per mascherare rumori urbani e introdurre elemento calming.</p>
+                             <button class="ai-button" data-type="quick-win">✨ Espandi Dettagli</button>
+                            <div class="grid grid-cols-3 gap-2 pt-4 mt-4 border-t"><div class="text-center"><div class="text-xs text-gray-500">INVESTMENT</div><div class="font-bold text-green-700" contenteditable="true" id="qw3-cost">€200-400</div></div><div class="text-center"><div class="text-xs text-gray-500">IMPACT</div><div class="font-bold text-green-700" contenteditable="true" id="qw3-impact">+2 Score</div></div><div class="text-center"><div class="text-xs text-gray-500">TIMELINE</div><div class="font-bold text-green-700" contenteditable="true" id="qw3-time">3 giorni</div></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 5: TRANSFORMATION ROADMAP -->
+                <div class="page">
+                    <div class="page-header"><h1 class="page-title">Transformation Roadmap</h1><p class="page-subtitle" contenteditable="true" id="roadmap-subtitle">Piano strategico per raggiungere Biophilic Score target 85/100</p></div>
+                    <div class="flex-grow grid grid-cols-3 gap-8">
+                        <div class="bg-gray-50 p-6 rounded-xl flex flex-col">
+                            <div class="text-green-700 font-bold text-lg">FASE 1</div>
+                            <div class="text-2xl font-semibold text-gray-800 mb-2" contenteditable="true" id="phase1-title">Quick Implementation</div>
+                            <div class="text-gray-500 font-medium mb-4" contenteditable="true" id="phase1-duration">Settimane 1-4 | Investment: €2k-3.5k</div>
+                            <div class="text-gray-600 flex-grow" contenteditable="true" id="phase1-tasks"><ul><li>Implementazione 5 Quick Wins</li><li>Basic air quality improvements</li><li>Natural lighting upgrades</li></ul></div>
+                            <button class="ai-button" data-type="roadmap">✨ Crea Piano d'Azione</button>
+                            <div class="mt-4 pt-4 border-t text-center font-semibold text-green-800" contenteditable="true" id="phase1-target">Target Score: 60 → 74</div>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-xl flex flex-col">
+                            <div class="text-green-700 font-bold text-lg">FASE 2</div>
+                            <div class="text-2xl font-semibold text-gray-800 mb-2" contenteditable="true" id="phase2-title">Structural Enhancement</div>
+                            <div class="text-gray-500 font-medium mb-4" contenteditable="true" id="phase2-duration">Mesi 2-4 | Investment: €8k-15k</div>
+                            <div class="text-gray-600 flex-grow" contenteditable="true" id="phase2-tasks"><ul><li>Living wall o green vertical installation</li><li>Water feature design e installation</li><li>Advanced acoustic treatment</li></ul></div>
+                            <button class="ai-button" data-type="roadmap">✨ Crea Piano d'Azione</button>
+                            <div class="mt-4 pt-4 border-t text-center font-semibold text-green-800" contenteditable="true" id="phase2-target">Target Score: 74 → 82</div>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-xl flex flex-col">
+                           <div class="text-green-700 font-bold text-lg">FASE 3</div>
+                            <div class="text-2xl font-semibold text-gray-800 mb-2" contenteditable="true" id="phase3-title">Optimization & Monitoring</div>
+                            <div class="text-gray-500 font-medium mb-4" contenteditable="true" id="phase3-duration">Mesi 5-6 | Investment: €2k-4k</div>
+                            <div class="text-gray-600 flex-grow" contenteditable="true" id="phase3-tasks"><ul><li>Environmental monitoring system setup</li><li>Fine-tuning basato su performance data</li><li>Seasonal adaptation</li></ul></div>
+                           <button class="ai-button" data-type="roadmap">✨ Crea Piano d'Azione</button>
+                            <div class="mt-4 pt-4 border-t text-center font-semibold text-green-800" contenteditable="true" id="phase3-target">Target Score: 82 → 85</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 6: NEXT STEPS -->
+                <div class="page">
+                    <div class="page-header"><h1 class="page-title">Next Steps</h1><p class="page-subtitle" contenteditable="true" id="nextsteps-subtitle">Opzioni di collaborazione e percorso di implementazione</p></div>
+                    <div class="flex-grow grid grid-cols-1 md:grid-cols-3 gap-6">
+                         <div class="border-2 border-green-600 bg-green-50 p-6 rounded-xl shadow-lg flex flex-col">
+                            <div class="text-xl font-bold text-green-800" contenteditable="true" id="opt1-title">NeuroHabitat Essential™</div>
+                            <p class="text-gray-600 my-4 flex-grow" contenteditable="true" id="opt1-desc">Implementazione Quick Wins + selective enhancements per impatto rapido e misurabile.</p>
+                            <div class="mt-auto space-y-2 text-sm"><div><strong>Timeline:</strong> <span contenteditable="true" id="opt1-time">2-4 settimane</span></div><div><strong>Investment:</strong> <span contenteditable="true" id="opt1-cost">€8.000-18.000</span></div><div><strong>Target Score:</strong> <span contenteditable="true" id="opt1-target">75-78 punti</span></div></div>
+                        </div>
+                         <div class="border border-gray-200 bg-white p-6 rounded-xl flex flex-col">
+                            <div class="text-xl font-bold text-gray-800" contenteditable="true" id="opt2-title">Biome Signature Project™</div>
+                            <p class="text-gray-600 my-4 flex-grow" contenteditable="true" id="opt2-desc">Trasformazione completa secondo roadmap per raggiungere classificazione Biophilic Advanced.</p>
+                            <div class="mt-auto space-y-2 text-sm"><div><strong>Timeline:</strong> <span contenteditable="true" id="opt2-time">3-6 mesi</span></div><div><strong>Investment:</strong> <span contenteditable="true" id="opt2-cost">€35.000-65.000</span></div><div><strong>Target Score:</strong> <span contenteditable="true" id="opt2-target">85+ punti</span></div></div>
+                        </div>
+                         <div class="border border-gray-200 bg-white p-6 rounded-xl flex flex-col">
+                            <div class="text-xl font-bold text-gray-800" contenteditable="true" id="opt3-title">Consulting Support</div>
+                            <p class="text-gray-600 my-4 flex-grow" contenteditable="true" id="opt3-desc">Guidance e supporto tecnico per implementation autonoma con specifications dettagliate.</p>
+                            <div class="mt-auto space-y-2 text-sm"><div><strong>Modalità:</strong> <span contenteditable="true" id="opt3-mode">Consulenza oraria</span></div><div><strong>Investment:</strong> <span contenteditable="true" id="opt3-cost">€150/ora</span></div><div><strong>Include:</strong> <span contenteditable="true" id="opt3-includes">Specs, Vendors, Support</span></div></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!-- Controlli di Navigazione -->
+        <div id="navigation-controls">
+            <button id="prev-btn" class="nav-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/></svg>
+            </button>
+            <div id="page-indicator">1 / 6</div>
+            <button id="reset-btn">Reset Dati</button>
+            <button id="next-btn" class="nav-button">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modale AI -->
+    <div id="ai-modal">
+        <div class="modal-content">
+            <button class="modal-close-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z"/>
+                </svg>
+            </button>
+            <h3 id="modal-title" class="modal-title"></h3>
+            <div id="modal-body" class="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // === ELEMENTI DOM ===
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const pageIndicator = document.getElementById('page-indicator');
+            const slides = document.querySelectorAll('#carousel .page');
+            const editableElements = document.querySelectorAll('[contenteditable="true"]');
+            const scoreCircle = document.getElementById('score-circle');
+            const scoreNumberEl = document.getElementById('biophilic-score');
+            const priorityBadges = document.querySelectorAll('.priority-badge');
+            
+            let currentIndex = 0;
+            const totalSlides = slides.length;
+
+            // === LOGICA DI NAVIGAZIONE ===
+            function updateControls() {
+                pageIndicator.textContent = `${currentIndex + 1} / ${totalSlides}`;
+                prevBtn.disabled = currentIndex === 0;
+                nextBtn.disabled = currentIndex === totalSlides - 1;
+            }
+            
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    slide.classList.remove('active', 'prev');
+                    if (i === index) slide.classList.add('active');
+                    else if (i < index) slide.classList.add('prev');
+                });
+                updateControls();
+            }
+
+            nextBtn.addEventListener('click', () => { if (currentIndex < totalSlides - 1) { currentIndex++; showSlide(currentIndex); } });
+            prevBtn.addEventListener('click', () => { if (currentIndex > 0) { currentIndex--; showSlide(currentIndex); } });
+
+            // === LOGICA DATI EDITABILI E LOCALSTORAGE ===
+            function saveData() {
+                const data = {};
+                editableElements.forEach(el => { data[el.id] = el.innerHTML; });
+                localStorage.setItem('biophilicReportData', JSON.stringify(data));
+            }
+
+            function loadData() {
+                const savedData = localStorage.getItem('biophilicReportData');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    for (const id in data) {
+                        const element = document.getElementById(id);
+                        if (element) element.innerHTML = data[id];
+                    }
+                }
+                updateScoreCircle();
+                updateAllBadgeColors(); // NUOVO: Aggiorna i colori dei badge al caricamento
+            }
+            
+            editableElements.forEach(el => { el.addEventListener('blur', saveData); });
+
+            resetBtn.addEventListener('click', () => {
+                if (confirm("Sei sicuro di voler cancellare tutte le modifiche? L'operazione è irreversibile.")) {
+                    localStorage.removeItem('biophilicReportData');
+                    location.reload();
+                }
+            });
+
+            // === LOGICA DINAMICA SPECIFICA ===
+            function updateScoreCircle() {
+                const score = parseInt(scoreNumberEl.innerText, 10) || 0;
+                const scoreClamped = Math.max(0, Math.min(100, score));
+                const degrees = (scoreClamped / 100) * 360;
+                scoreCircle.style.background = `conic-gradient(#4a7c59 0deg ${degrees}deg, #e5e7eb ${degrees}deg 360deg)`;
+            }
+
+            scoreNumberEl.addEventListener('blur', updateScoreCircle);
+
+            // --- NUOVO: LOGICA PER I BADGE DINAMICI ---
+            /**
+             * Aggiorna il colore di un singolo badge in base al suo testo.
+             * @param {HTMLElement} badge - L'elemento del badge da aggiornare.
+             */
+            function updateBadgeColor(badge) {
+                const text = badge.innerText.trim().toLowerCase();
+                // Rimuove le classi di colore esistenti
+                badge.classList.remove('bg-green-600', 'bg-orange-500', 'bg-red-600', 'bg-gray-500');
+
+                switch (text) {
+                    case 'alta':
+                        badge.classList.add('bg-green-600');
+                        break;
+                    case 'media':
+                        badge.classList.add('bg-orange-500');
+                        break;
+                    case 'bassa':
+                        badge.classList.add('bg-red-600');
+                        break;
+                    default:
+                        badge.classList.add('bg-gray-500'); // Colore di fallback
+                        break;
+                }
+            }
+
+            /**
+             * Itera su tutti i badge e aggiorna il loro colore.
+             */
+            function updateAllBadgeColors() {
+                priorityBadges.forEach(badge => updateBadgeColor(badge));
+            }
+
+            // Aggiunge un listener a ogni badge per aggiornare il colore dopo la modifica.
+            priorityBadges.forEach(badge => {
+                badge.addEventListener('blur', () => {
+                    updateBadgeColor(badge);
+                });
+            });
+
+
+            // === LOGICA API GEMINI ===
+            const modal = document.getElementById('ai-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const aiButtons = document.querySelectorAll('.ai-button');
+
+            function formatGeminiResponse(text) { return text.replace(/\*\*(.*?)\*\*/g, '<h4>$1</h4>').replace(/\* (.*?)(?=\n\*|\n\n|$)/g, '<li>$1</li>').replace(/(\<li\>.*?\<\/li\>)+/g, '<ul>$&</ul>').replace(/\n/g, '<br>'); }
+            function showModal(title = '') { modalTitle.innerHTML = title; modal.classList.add('visible'); }
+            function hideModal() { modal.classList.remove('visible'); modalBody.innerHTML = ''; modalTitle.innerHTML = ''; }
+            modal.addEventListener('click', (e) => { if (e.target === modal || e.target.closest('.modal-close-btn')) hideModal(); });
+
+            async function callGeminiAPI(prompt) {
+                modalBody.innerHTML = '<div class="flex justify-center"><div class="loader"></div></div>';
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`Errore HTTP: ${response.status}`);
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        modalBody.innerHTML = formatGeminiResponse(text);
+                    } else { throw new Error("Nessuna risposta valida ricevuta dall'API."); }
+                } catch (error) { modalBody.innerHTML = `<p class="text-red-600">Si è verificato un errore. Riprova più tardi. Dettagli: ${error.message}</p>`; }
+            }
+            
+            aiButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const type = button.dataset.type;
+                    let prompt = '';
+                    let title = '';
+
+                    if (type === 'quick-win') {
+                        const card = button.closest('.recommendation-item');
+                        const recTitle = card.querySelector('[id$="-title"]').innerHTML;
+                        const recDesc = card.querySelector('[id$="-desc"]').innerHTML;
+                        title = `Approfondimento: ${recTitle}`;
+                        prompt = `Sei un esperto di design biofilico. Espandi la seguente raccomandazione: Titolo: "${recTitle}". Descrizione: "${recDesc}". Fornisci: **Perché Funziona:** (spiegazione neuroscientifica), **Suggerimenti Pratici:** (consigli implementativi), **Benefici Attesi:** (miglioramenti concreti). Tono professionale e accessibile. Formato con titoli in grassetto e liste puntate.`;
+                    } else if (type === 'roadmap') {
+                        const card = button.closest('.flex-col');
+                        const phaseTitle = card.querySelector('[id$="-title"]').innerHTML;
+                        const phaseDuration = card.querySelector('[id$="-duration"]').innerHTML;
+                        const phaseTasks = card.querySelector('[id$="-tasks"]').innerText;
+                        title = `Piano d'Azione: ${phaseTitle}`;
+                        prompt = `Sei un project manager specializzato in architettura sostenibile. Crea un piano d'azione dettagliato per la fase: "${phaseTitle}" (Durata/Budget: "${phaseDuration}", Obiettivi: "${phaseTasks}"). Struttura il piano per periodo (settimana/mese) con: **Azioni Chiave:**, **Responsabilità Suggerita:**, **Consiglio del PM:**. Tono pragmatico, formato con grassetto e liste.`;
+                    }
+                    
+                    showModal(title);
+                    callGeminiAPI(prompt);
+                });
+            });
+
+            // === INIZIALIZZAZIONE APP ===
+            loadData();
+            showSlide(currentIndex);
+        });
+    </script>
+</body>
+</html>

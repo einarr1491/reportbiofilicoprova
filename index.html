@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Report Biofilico Interattivo e Compilabile</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,58 +11,35 @@
     <style>
         /* Stili di base e importazione font */
         html, body {
-            height: 100%;
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Previene lo scroll globale */
+            scroll-behavior: smooth;
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #000; 
+            background-color: #f0f4f0; 
         }
 
         /* Contenitore principale a schermo intero */
         #presentation-container {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            box-sizing: border-box;
         }
         
-        /* Carosello che contiene le slide */
-        #carousel {
-            width: 100%;
-            height: 100%;
-            perspective: 1500px;
-        }
-
-        /* Stile base delle pagine/slide full-screen */
-        .page {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            padding: 3rem 4rem;
+        /* Stile base delle sezioni (ex pagine) */
+        .section {
             background: white;
             color: #2d2d2d;
-            overflow-y: auto; /* Scroll interno se il contenuto è troppo */
-            transition: transform 0.7s ease-in-out, opacity 0.7s ease-in-out;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-            opacity: 0;
-            transform: translateX(100%) scale(0.95);
+            padding: 3rem 4rem;
+            margin-bottom: 2rem;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.07);
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
         }
         
-        .page.active {
-            opacity: 1;
-            transform: translateX(0) scale(1);
-            z-index: 10;
-        }
-
-        .page.prev {
-            transform: translateX(-100%) scale(0.95);
-            opacity: 0;
-        }
-
         /* Stili per elementi editabili */
         [contenteditable="true"] {
             transition: all 0.3s ease;
@@ -87,6 +64,7 @@
             background-position: center;
             color: white;
             justify-content: space-between;
+            min-height: 80vh;
         }
          .cover-page [contenteditable="true"]:hover { background-color: rgba(255,255,255,0.1); }
          .cover-page [contenteditable="true"]:focus { background-color: rgba(255,255,255,0.2); outline-color: #a7f3d0; }
@@ -96,37 +74,23 @@
         .page-title { font-size: 2.8rem; font-weight: 300; color: #2d4b2d; letter-spacing: -1px; margin-bottom: 0.5rem; }
         .page-subtitle { font-size: 1.1rem; color: #666; font-weight: 300; letter-spacing: 0.5px; }
         
-        /* Controlli di navigazione fissi */
-        #navigation-controls {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            z-index: 50;
-            padding: 0.5rem;
-            background-color: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 9999px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        }
-
-        .nav-button {
-            background-color: transparent; border: none; color: #1f2937;
-            width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .nav-button:hover { background-color: #4a7c59; color: white; }
-        .nav-button:disabled { opacity: 0.3; cursor: not-allowed; background-color: transparent; }
-
-        #page-indicator {
-            background-color: transparent; padding: 0.5rem 1.5rem; border-radius: 20px;
-            font-weight: 500; color: #1f2937;
-        }
+        /* Layout specifici */
+        .cover-title { font-size: 4.5rem; font-weight: 300; line-height: 1.1; margin-bottom: 2rem; letter-spacing: -1px; }
+        .cover-subtitle { font-size: 1.4rem; font-weight: 300; opacity: 0.9; letter-spacing: 2px; text-transform: uppercase; }
+        .score-section { background: #f8faf8; border-radius: 16px; padding: 2rem; text-align: center; margin: 1.5rem 0; }
+        .score-display { display: flex; align-items: center; justify-content: center; gap: 2rem; flex-wrap: wrap; }
+        #score-circle { width: 140px; height: 140px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.5s ease; }
+        #score-circle::before { content: ''; width: 100px; height: 100px; border-radius: 50%; background: white; position: absolute; }
+        .score-number { font-size: 2.5rem; font-weight: 700; color: #2d4b2d; z-index: 1; }
+        .score-label { font-size: 1.8rem; font-weight: 600; color: #2d4b2d; }
+        .numbered-section { display: flex; align-items: flex-start; margin-bottom: 1.5rem; gap: 1.5rem; }
+        .number-badge { background: #4a7c59; color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; }
+        .content-title { font-size: 1.3rem; font-weight: 600; color: #2d2d2d; margin-bottom: 0.5rem; }
+        .content-description { color: #666; line-height: 1.6; font-size: 1rem; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .metric-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; text-align: center; }
+        .recommendation-item { display: flex; flex-direction: column; background: #f8faf8; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; }
+        .rec-description { flex-grow: 1; }
         
         /* Stili per il dropdown di priorità */
         .priority-select {
@@ -142,16 +106,29 @@
             background-repeat: no-repeat;
             background-position: right 0.5rem center;
             transition: background-color 0.3s ease;
+            cursor: pointer;
         }
         .priority-select:focus { outline: 2px solid #2d4b2d; }
 
-        /* Stili di layout e componenti */
-        .cover-title { font-size: 4.5rem; }
-        #reset-btn { position: fixed; bottom: 30px; right: 30px; z-index: 100; background-color: #ef4444; color: white; width: 56px; height: 56px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: all 0.3s ease; }
+        /* Pulsante Reset Dati Fluttuante */
+        #reset-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+            background-color: #ef4444; color: white;
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
         #reset-btn:hover { background-color: #dc2626; transform: scale(1.1); }
-        .ai-button { background-color: #eaf2ea; color: #2d4b2d; border: 1px solid #c1d4c3; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; margin-top: 1rem; align-self: flex-start; }
-        .ai-button:hover { background-color: #2d4b2d; color: white; }
-        
+
         /* Stili Modale AI */
         #ai-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
         #ai-modal.visible { opacity: 1; visibility: visible; }
@@ -160,13 +137,24 @@
         .modal-close-btn { position: absolute; top: 1rem; right: 1rem; background: #f3f4f6; border-radius: 50%; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; cursor: pointer; border: none; }
         .modal-title { font-size: 1.5rem; font-weight: 600; color: #2d4b2d; margin-bottom: 1rem; }
         .modal-body { color: #4b5563; line-height: 1.7; }
-        
-        /* Media query per mobile */
+        .modal-body h4 { font-weight: 600; color: #2d4b2d; margin-top: 1rem; margin-bottom: 0.5rem; }
+        .modal-body ul { list-style-type: disc; padding-left: 1.5rem; }
+        .ai-button { background-color: #eaf2ea; color: #2d4b2d; border: 1px solid #c1d4c3; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; margin-top: 1rem; align-self: flex-start; }
+        .ai-button:hover { background-color: #2d4b2d; color: white; }
+        .loader { width: 48px; height: 48px; border: 5px solid #4a7c59; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         @media (max-width: 768px) {
-            .page { padding: 2rem 1.5rem 8rem 1.5rem; }
+            #presentation-container {
+                padding: 1rem;
+            }
+            .section {
+                padding: 2rem 1.5rem;
+            }
+
             .cover-title { font-size: 3rem; }
             .page-title { font-size: 2.2rem; }
-            .flex-grow.grid { grid-template-columns: 1fr !important; } /* Forzo colonna singola */
+            .flex-grow.grid { grid-template-columns: 1fr !important; }
             .client-section .grid { grid-template-columns: 1fr; }
         }
     </style>
@@ -174,9 +162,8 @@
 <body>
 
     <div id="presentation-container">
-        <div id="carousel">
-            <!-- SLIDE 1: COVER PAGE -->
-            <div class="page cover-page active">
+            <!-- SEZIONE 1: COVER PAGE -->
+            <div class="section cover-page">
                 <div class="header-info flex justify-between items-start">
                     <div id="studio-name" contenteditable="true" class="font-semibold text-xl">[NOME STUDIO]</div>
                     <span class="text-md opacity-90">stefanobocci.com</span>
@@ -199,8 +186,8 @@
                 </div>
             </div>
 
-            <!-- SLIDE 2: EXECUTIVE SUMMARY -->
-            <div class="page">
+            <!-- SEZIONE 2: EXECUTIVE SUMMARY -->
+            <div class="section">
                 <div class="page-header">
                     <h1 class="page-title">Executive Summary</h1>
                     <p class="page-subtitle" contenteditable="true" id="summary-subtitle">Sintesi delle principali scoperte e raccomandazioni strategiche</p>
@@ -233,8 +220,8 @@
                 </div>
             </div>
 
-            <!-- SLIDE 3: BIOPHILIC SCORE ANALYSIS -->
-             <div class="page">
+            <!-- SEZIONE 3: BIOPHILIC SCORE ANALYSIS -->
+             <div class="section">
                 <div class="page-header"><h1 class="page-title">Biophilic Score Analysis</h1><p class="page-subtitle" contenteditable="true" id="analysis-subtitle">Breakdown dettagliato delle categorie</p></div>
                 <div class="flex-grow grid grid-cols-2 gap-8">
                     <div class="space-y-4">
@@ -252,13 +239,13 @@
                 </div>
             </div>
             
-            <!-- SLIDE 4: QUICK WINS -->
-            <div class="page">
+            <!-- SEZIONE 4: QUICK WINS -->
+            <div class="section">
                 <div class="page-header"><h1 class="page-title">Quick Wins Strategy</h1><p class="page-subtitle" contenteditable="true" id="quickwins-subtitle">Interventi a impatto immediato</p></div>
                 <div class="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="recommendation-item">
                         <div class="flex justify-between items-start mb-2">
-                            <h3 class="text-xl font-semibold text-green-800 flex-grow" contenteditable="true" id="qw1-title">Integrazione Piante</h3>
+                            <h3 class="text-xl font-semibold text-green-800 flex-grow pr-4" contenteditable="true" id="qw1-title">Integrazione Piante</h3>
                             <select class="priority-select" id="qw1-priority-select"><option>Alta</option><option>Media</option><option>Bassa</option></select>
                         </div>
                         <p class="rec-description" contenteditable="true" id="qw1-desc">Introduzione di 5-7 piante purificanti (Sansevieria, Pothos).</p>
@@ -267,7 +254,7 @@
                     </div>
                     <div class="recommendation-item">
                         <div class="flex justify-between items-start mb-2">
-                            <h3 class="text-xl font-semibold text-green-800 flex-grow" contenteditable="true" id="qw2-title">Luce Circadiana</h3>
+                            <h3 class="text-xl font-semibold text-green-800 flex-grow pr-4" contenteditable="true" id="qw2-title">Luce Circadiana</h3>
                             <select class="priority-select" id="qw2-priority-select"><option>Alta</option><option>Media</option><option>Bassa</option></select>
                         </div>
                         <p class="rec-description" contenteditable="true" id="qw2-desc">Sostituzione lampade con LED programmabili 2700K-5000K.</p>
@@ -276,7 +263,7 @@
                     </div>
                      <div class="recommendation-item">
                         <div class="flex justify-between items-start mb-2">
-                            <h3 class="text-xl font-semibold text-green-800 flex-grow" contenteditable="true" id="qw3-title">Suoni Naturali</h3>
+                            <h3 class="text-xl font-semibold text-green-800 flex-grow pr-4" contenteditable="true" id="qw3-title">Suoni Naturali</h3>
                             <select class="priority-select" id="qw3-priority-select"><option>Media</option><option>Alta</option><option>Bassa</option></select>
                         </div>
                         <p class="rec-description" contenteditable="true" id="qw3-desc">Installazione piccola fontana o sound system con suoni naturali.</p>
@@ -286,18 +273,58 @@
                 </div>
             </div>
 
-            <!-- SLIDE 5: TRANSFORMATION ROADMAP -->
-            <div class="page"><!-- Contenuto invariato --></div>
-            <!-- SLIDE 6: NEXT STEPS -->
-            <div class="page"><!-- Contenuto invariato --></div>
-        </div>
+            <!-- SEZIONE 5: TRANSFORMATION ROADMAP -->
+            <div class="section">
+                 <div class="page-header"><h1 class="page-title">Transformation Roadmap</h1><p class="page-subtitle" contenteditable="true" id="roadmap-subtitle">Piano strategico per raggiungere Biophilic Score target 85/100</p></div>
+                 <div class="flex-grow grid grid-cols-1 md:grid-cols-3 gap-8">
+                     <div class="bg-gray-50 p-6 rounded-xl flex flex-col">
+                         <div class="text-green-700 font-bold text-lg">FASE 1</div>
+                         <div class="text-2xl font-semibold text-gray-800 mb-2" contenteditable="true" id="phase1-title">Quick Implementation</div>
+                         <div class="text-gray-500 font-medium mb-4" contenteditable="true" id="phase1-duration">Settimane 1-4 | Investment: €2k-3.5k</div>
+                         <div class="text-gray-600 flex-grow" contenteditable="true" id="phase1-tasks"><ul><li>Implementazione 5 Quick Wins</li><li>Basic air quality improvements</li><li>Natural lighting upgrades</li></ul></div>
+                         <button class="ai-button" data-type="roadmap">✨ Crea Piano d'Azione</button>
+                         <div class="mt-4 pt-4 border-t text-center font-semibold text-green-800" contenteditable="true" id="phase1-target">Target Score: 60 → 74</div>
+                     </div>
+                     <div class="bg-gray-50 p-6 rounded-xl flex flex-col">
+                         <div class="text-green-700 font-bold text-lg">FASE 2</div>
+                         <div class="text-2xl font-semibold text-gray-800 mb-2" contenteditable="true" id="phase2-title">Structural Enhancement</div>
+                         <div class="text-gray-500 font-medium mb-4" contenteditable="true" id="phase2-duration">Mesi 2-4 | Investment: €8k-15k</div>
+                         <div class="text-gray-600 flex-grow" contenteditable="true" id="phase2-tasks"><ul><li>Living wall o green vertical installation</li><li>Water feature design e installation</li><li>Advanced acoustic treatment</li></ul></div>
+                         <button class="ai-button" data-type="roadmap">✨ Crea Piano d'Azione</button>
+                         <div class="mt-4 pt-4 border-t text-center font-semibold text-green-800" contenteditable="true" id="phase2-target">Target Score: 74 → 82</div>
+                     </div>
+                     <div class="bg-gray-50 p-6 rounded-xl flex flex-col">
+                        <div class="text-green-700 font-bold text-lg">FASE 3</div>
+                         <div class="text-2xl font-semibold text-gray-800 mb-2" contenteditable="true" id="phase3-title">Optimization & Monitoring</div>
+                         <div class="text-gray-500 font-medium mb-4" contenteditable="true" id="phase3-duration">Mesi 5-6 | Investment: €2k-4k</div>
+                         <div class="text-gray-600 flex-grow" contenteditable="true" id="phase3-tasks"><ul><li>Environmental monitoring system setup</li><li>Fine-tuning basato su performance data</li><li>Seasonal adaptation</li></ul></div>
+                        <button class="ai-button" data-type="roadmap">✨ Crea Piano d'Azione</button>
+                         <div class="mt-4 pt-4 border-t text-center font-semibold text-green-800" contenteditable="true" id="phase3-target">Target Score: 82 → 85</div>
+                     </div>
+                 </div>
+            </div>
 
-        <!-- Controlli di Navigazione -->
-        <div id="navigation-controls">
-            <button id="prev-btn" class="nav-button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/></svg></button>
-            <div id="page-indicator">1 / 6</div>
-            <button id="next-btn" class="nav-button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/></svg></button>
-        </div>
+            <!-- SEZIONE 6: NEXT STEPS -->
+            <div class="section">
+                 <div class="page-header"><h1 class="page-title">Next Steps</h1><p class="page-subtitle" contenteditable="true" id="nextsteps-subtitle">Opzioni di collaborazione e percorso di implementazione</p></div>
+                 <div class="flex-grow grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div class="border-2 border-green-600 bg-green-50 p-6 rounded-xl shadow-lg flex flex-col">
+                         <div class="text-xl font-bold text-green-800" contenteditable="true" id="opt1-title">NeuroHabitat Essential™</div>
+                         <p class="text-gray-600 my-4 flex-grow" contenteditable="true" id="opt1-desc">Implementazione Quick Wins + selective enhancements per impatto rapido e misurabile.</p>
+                         <div class="mt-auto space-y-2 text-sm"><div><strong>Timeline:</strong> <span contenteditable="true" id="opt1-time">2-4 settimane</span></div><div><strong>Investment:</strong> <span contenteditable="true" id="opt1-cost">€8.000-18.000</span></div><div><strong>Target Score:</strong> <span contenteditable="true" id="opt1-target">75-78 punti</span></div></div>
+                     </div>
+                      <div class="border border-gray-200 bg-white p-6 rounded-xl flex flex-col">
+                         <div class="text-xl font-bold text-gray-800" contenteditable="true" id="opt2-title">Biome Signature Project™</div>
+                         <p class="text-gray-600 my-4 flex-grow" contenteditable="true" id="opt2-desc">Trasformazione completa secondo roadmap per raggiungere classificazione Biophilic Advanced.</p>
+                         <div class="mt-auto space-y-2 text-sm"><div><strong>Timeline:</strong> <span contenteditable="true" id="opt2-time">3-6 mesi</span></div><div><strong>Investment:</strong> <span contenteditable="true" id="opt2-cost">€35.000-65.000</span></div><div><strong>Target Score:</strong> <span contenteditable="true" id="opt2-target">85+ punti</span></div></div>
+                     </div>
+                      <div class="border border-gray-200 bg-white p-6 rounded-xl flex flex-col">
+                         <div class="text-xl font-bold text-gray-800" contenteditable="true" id="opt3-title">Consulting Support</div>
+                         <p class="text-gray-600 my-4 flex-grow" contenteditable="true" id="opt3-desc">Guidance e supporto tecnico per implementation autonoma con specifications dettagliate.</p>
+                         <div class="mt-auto space-y-2 text-sm"><div><strong>Modalità:</strong> <span contenteditable="true" id="opt3-mode">Consulenza oraria</span></div><div><strong>Investment:</strong> <span contenteditable="true" id="opt3-cost">€150/ora</span></div><div><strong>Include:</strong> <span contenteditable="true" id="opt3-includes">Specs, Vendors, Support</span></div></div>
+                     </div>
+                 </div>
+            </div>
     </div>
     
     <button id="reset-btn" title="Reset Dati"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg></button>
@@ -306,21 +333,13 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // === ELEMENTI DOM ===
-            const carousel = document.getElementById('carousel');
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
             const resetBtn = document.getElementById('reset-btn');
-            const pageIndicator = document.getElementById('page-indicator');
-            const slides = document.querySelectorAll('.page');
             const editableElements = document.querySelectorAll('[contenteditable="true"]');
             const prioritySelects = document.querySelectorAll('.priority-select');
             const scoreCircle = document.getElementById('score-circle');
             const scoreNumberEl = document.getElementById('biophilic-score');
             const reportDateEl = document.getElementById('report-date');
             
-            let currentIndex = 0;
-            const totalSlides = slides.length;
-
             // === IMPOSTAZIONE DATA AUTOMATICA ===
             function setDate() {
                 const today = new Date();
@@ -328,45 +347,11 @@
                 reportDateEl.textContent = today.toLocaleDateString('it-IT', options);
             }
 
-            // === LOGICA DI NAVIGAZIONE ===
-            function updateControls() {
-                pageIndicator.textContent = `${currentIndex + 1} / ${totalSlides}`;
-                prevBtn.disabled = currentIndex === 0;
-                nextBtn.disabled = currentIndex === totalSlides - 1;
-            }
-            
-            function showSlide(index) {
-                slides.forEach((slide, i) => {
-                    slide.classList.remove('active', 'prev');
-                    if (i === index) slide.classList.add('active');
-                    else if (i < index) slide.classList.add('prev');
-                });
-                updateControls();
-            }
-
-            function nextPage() { if (currentIndex < totalSlides - 1) { currentIndex++; showSlide(currentIndex); } }
-            function prevPage() { if (currentIndex > 0) { currentIndex--; showSlide(currentIndex); } }
-
-            nextBtn.addEventListener('click', nextPage);
-            prevBtn.addEventListener('click', prevPage);
-
-            // === LOGICA SWIPE PER MOBILE ===
-            let touchStartX = 0;
-            carousel.addEventListener('touchstart', e => { if (!e.target.isContentEditable) touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-            carousel.addEventListener('touchend', e => {
-                if (!e.target.isContentEditable) {
-                    const touchEndX = e.changedTouches[0].screenX;
-                    const swipeThreshold = 50;
-                    if (touchStartX - touchEndX > swipeThreshold) nextPage();
-                    else if (touchEndX - touchStartX > swipeThreshold) prevPage();
-                }
-            });
-
             // === LOGICA DATI E LOCALSTORAGE ===
             function saveData() {
                 const data = {};
                 editableElements.forEach(el => { data[el.id] = el.innerHTML; });
-                prioritySelects.forEach(sel => { data[sel.id] = sel.value; }); // Salva i valori dei dropdown
+                prioritySelects.forEach(sel => { data[sel.id] = sel.value; });
                 localStorage.setItem('biophilicReportData', JSON.stringify(data));
             }
 
@@ -387,7 +372,7 @@
             }
             
             editableElements.forEach(el => el.addEventListener('blur', saveData));
-            prioritySelects.forEach(sel => sel.addEventListener('change', saveData)); // Salva anche al cambio del dropdown
+            prioritySelects.forEach(sel => sel.addEventListener('change', saveData));
 
             resetBtn.addEventListener('click', () => {
                 if (confirm("Sei sicuro di voler cancellare tutte le modifiche? L'operazione è irreversibile.")) {
@@ -419,13 +404,62 @@
             prioritySelects.forEach(sel => sel.addEventListener('change', () => updateSelectColor(sel)));
 
             // === LOGICA API GEMINI (invariata) ===
-            // ... (La logica per l'API di Gemini rimane la stessa)
+            const modal = document.getElementById('ai-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const aiButtons = document.querySelectorAll('.ai-button');
+
+            function formatGeminiResponse(text) { return text.replace(/\*\*(.*?)\*\*/g, '<h4>$1</h4>').replace(/\* (.*?)(?=\n\*|\n\n|$)/g, '<li>$1</li>').replace(/(\<li\>.*?\<\/li\>)+/g, '<ul>$&</ul>').replace(/\n/g, '<br>'); }
+            function showModal(title = '') { modalTitle.innerHTML = title; modal.classList.add('visible'); }
+            function hideModal() { modal.classList.remove('visible'); modalBody.innerHTML = ''; modalTitle.innerHTML = ''; }
+            modal.addEventListener('click', (e) => { if (e.target === modal || e.target.closest('.modal-close-btn')) hideModal(); });
+
+            async function callGeminiAPI(prompt) {
+                modalBody.innerHTML = '<div class="flex justify-center"><div class="loader"></div></div>';
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`Errore HTTP: ${response.status}`);
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        modalBody.innerHTML = formatGeminiResponse(text);
+                    } else { throw new Error("Nessuna risposta valida ricevuta dall'API."); }
+                } catch (error) { modalBody.innerHTML = `<p class="text-red-600">Si è verificato un errore. Riprova più tardi. Dettagli: ${error.message}</p>`; }
+            }
+            
+            aiButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const type = button.dataset.type;
+                    let prompt = '';
+                    let title = '';
+
+                    if (type === 'quick-win') {
+                        const card = button.closest('.recommendation-item');
+                        const recTitle = card.querySelector('[id$="-title"]').innerHTML;
+                        const recDesc = card.querySelector('[id$="-desc"]').innerHTML;
+                        title = `Approfondimento: ${recTitle}`;
+                        prompt = `Sei un esperto di design biofilico. Espandi la seguente raccomandazione: Titolo: "${recTitle}". Descrizione: "${recDesc}". Fornisci: **Perché Funziona:** (spiegazione neuroscientifica), **Suggerimenti Pratici:** (consigli implementativi), **Benefici Attesi:** (miglioramenti concreti). Tono professionale e accessibile. Formato con titoli in grassetto e liste puntate.`;
+                    } else if (type === 'roadmap') {
+                        const card = button.closest('.flex-col');
+                        const phaseTitle = card.querySelector('[id$="-title"]').innerHTML;
+                        const phaseDuration = card.querySelector('[id$="-duration"]').innerHTML;
+                        const phaseTasks = card.querySelector('[id$="-tasks"]').innerText;
+                        title = `Piano d'Azione: ${phaseTitle}`;
+                        prompt = `Sei un project manager specializzato in architettura sostenibile. Crea un piano d'azione dettagliato per la fase: "${phaseTitle}" (Durata/Budget: "${phaseDuration}", Obiettivi: "${phaseTasks}"). Struttura il piano per periodo (settimana/mese) con: **Azioni Chiave:**, **Responsabilità Suggerita:**, **Consiglio del PM:**. Tono pragmatico, formato con grassetto e liste.`;
+                    }
+                    
+                    showModal(title);
+                    callGeminiAPI(prompt);
+                });
+            });
 
             // === INIZIALIZZAZIONE APP ===
             setDate();
             loadData();
-            showSlide(currentIndex);
         });
     </script>
 </body>
-</html>
+</ht

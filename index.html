@@ -10,35 +10,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* Stili di base e importazione font */
-        body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #111827; /* Sfondo scuro per far risaltare la presentazione */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f0; 
         }
 
-        /* Contenitore principale per forzare il formato 16:9 */
+        /* Contenitore principale a schermo intero */
         #presentation-container {
             width: 100%;
-            max-width: 1420px;
-            background-color: #000;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            border-radius: 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Centra i controlli orizzontalmente */
+            height: 100%;
+            position: relative;
+            background: white;
         }
         
-        .aspect-ratio-box {
-            position: relative;
-            width: 100%;
-            padding-top: 56.25%; /* Padding top per un aspect ratio 16:9 (9 / 16 = 0.5625) */
-            height: 0;
-        }
-
         /* Stile per il carosello delle slide */
         #carousel {
             position: absolute;
@@ -62,9 +50,10 @@
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
             opacity: 0;
-            transform: translateX(100%) scale(0.8);
+            transform: translateX(100%) scale(0.9);
             display: flex;
             flex-direction: column;
+            box-sizing: border-box;
         }
         
         .page.active {
@@ -74,7 +63,7 @@
         }
 
         .page.prev {
-            transform: translateX(-100%) scale(0.8);
+            transform: translateX(-100%) scale(0.9);
             opacity: 0;
         }
 
@@ -111,26 +100,36 @@
         .page-title { font-size: 2.8rem; font-weight: 300; color: #2d4b2d; letter-spacing: -1px; margin-bottom: 0.5rem; }
         .page-subtitle { font-size: 1.1rem; color: #666; font-weight: 300; letter-spacing: 0.5px; }
 
-        /* Controlli di navigazione */
+        /* Controlli di navigazione fissi */
         #navigation-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
             align-items: center;
             gap: 1rem;
-            z-index: 20;
-            padding: 20px 0; /* Aggiunge spazio verticale per i controlli */
+            z-index: 50;
+            padding: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 9999px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
 
         .nav-button {
-            background-color: rgba(255, 255, 255, 0.9); border: 1px solid #4b5563; color: #1f2937;
+            background-color: transparent; border: none; color: #1f2937;
             width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s ease;
+            transition: all 0.3s ease;
         }
         .nav-button:hover { background-color: #4a7c59; color: white; }
-        .nav-button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; background-color: #9ca3af; }
+        .nav-button:disabled { opacity: 0.3; cursor: not-allowed; background-color: transparent; }
 
         #page-indicator {
-            background-color: rgba(255, 255, 255, 0.9); padding: 0.5rem 1.5rem; border-radius: 20px;
-            font-weight: 500; color: #1f2937; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background-color: transparent; padding: 0.5rem 1.5rem; border-radius: 20px;
+            font-weight: 500; color: #1f2937;
         }
         
         /* Layout specifici */
@@ -184,31 +183,9 @@
         .loader { width: 48px; height: 48px; border: 5px solid #4a7c59; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-
-        /* --- NUOVO: MEDIA QUERY PER DISPOSITIVI MOBILI --- */
         @media (max-width: 768px) {
-            body {
-                overflow: auto; /* Permette lo scroll su mobile */
-                height: auto;
-                align-items: flex-start; /* Allinea il contenuto in alto */
-            }
-
-            #presentation-container {
-                max-width: 100%;
-                height: 100%;
-                border-radius: 0;
-                background-color: transparent; /* Rimuove lo sfondo nero su mobile */
-                box-shadow: none;
-            }
-
-            .aspect-ratio-box {
-                padding-top: 0; /* Rimuove l'aspect ratio fisso */
-                height: calc(100vh - 84px); /* Occupa lo schermo meno lo spazio per i controlli */
-            }
-
             .page {
-                padding: 2rem 1.5rem;
-                border-radius: 0;
+                padding: 2rem 1.5rem 8rem 1.5rem; /* Aggiunge padding in basso per non sovrapporsi ai controlli */
             }
 
             .cover-title { font-size: 3rem; }
@@ -228,36 +205,12 @@
             .recommendation-item {
                 margin-bottom: 1.5rem;
             }
-
-            /* Fissa i controlli in basso */
-            #navigation-controls {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                background-color: rgba(17, 24, 39, 0.9); /* #111827 con trasparenza */
-                backdrop-filter: blur(5px);
-                -webkit-backdrop-filter: blur(5px);
-                padding: 1rem;
-                justify-content: center;
-                border-top: 1px solid #374151;
-            }
-            .nav-button, #page-indicator, #reset-btn {
-                background-color: rgba(255, 255, 255, 0.1);
-                color: #e5e7eb;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-            }
-             .nav-button:hover { background-color: #4a7c59; color: white; }
-             #reset-btn { background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; }
-             #reset-btn:hover { background-color: #ef4444; color: white; }
         }
-
     </style>
 </head>
 <body>
 
     <div id="presentation-container">
-        <div class="aspect-ratio-box">
             <div id="carousel">
                 <!-- SLIDE 1: COVER PAGE -->
                 <div class="page cover-page active">
@@ -427,7 +380,6 @@
                 </div>
 
             </div>
-        </div>
         <!-- Controlli di Navigazione -->
         <div id="navigation-controls">
             <button id="prev-btn" class="nav-button">
@@ -457,6 +409,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // === ELEMENTI DOM ===
+            const carousel = document.getElementById('carousel');
             const prevBtn = document.getElementById('prev-btn');
             const nextBtn = document.getElementById('next-btn');
             const resetBtn = document.getElementById('reset-btn');
@@ -486,8 +439,49 @@
                 updateControls();
             }
 
-            nextBtn.addEventListener('click', () => { if (currentIndex < totalSlides - 1) { currentIndex++; showSlide(currentIndex); } });
-            prevBtn.addEventListener('click', () => { if (currentIndex > 0) { currentIndex--; showSlide(currentIndex); } });
+            function nextPage() {
+                if (currentIndex < totalSlides - 1) {
+                    currentIndex++;
+                    showSlide(currentIndex);
+                }
+            }
+
+            function prevPage() {
+                 if (currentIndex > 0) {
+                    currentIndex--;
+                    showSlide(currentIndex);
+                }
+            }
+
+            nextBtn.addEventListener('click', nextPage);
+            prevBtn.addEventListener('click', prevPage);
+
+            // === LOGICA SWIPE PER MOBILE ===
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            carousel.addEventListener('touchstart', (event) => {
+                // Non interferire se l'utente sta interagendo con un campo editabile
+                if (document.activeElement.isContentEditable) return;
+                touchStartX = event.changedTouches[0].screenX;
+            }, { passive: true });
+
+            carousel.addEventListener('touchend', (event) => {
+                if (document.activeElement.isContentEditable) return;
+                touchEndX = event.changedTouches[0].screenX;
+                handleSwipe();
+            });
+
+            function handleSwipe() {
+                const swipeThreshold = 50; // Minima distanza per uno swipe
+                if (touchStartX - touchEndX > swipeThreshold) {
+                    // Swipe a sinistra
+                    nextPage();
+                } else if (touchEndX - touchStartX > swipeThreshold) {
+                    // Swipe a destra
+                    prevPage();
+                }
+            }
 
             // === LOGICA DATI EDITABILI E LOCALSTORAGE ===
             function saveData() {
@@ -506,7 +500,7 @@
                     }
                 }
                 updateScoreCircle();
-                updateAllBadgeColors(); // NUOVO: Aggiorna i colori dei badge al caricamento
+                updateAllBadgeColors();
             }
             
             editableElements.forEach(el => { el.addEventListener('blur', saveData); });
@@ -528,44 +522,25 @@
 
             scoreNumberEl.addEventListener('blur', updateScoreCircle);
 
-            // --- NUOVO: LOGICA PER I BADGE DINAMICI ---
-            /**
-             * Aggiorna il colore di un singolo badge in base al suo testo.
-             * @param {HTMLElement} badge - L'elemento del badge da aggiornare.
-             */
             function updateBadgeColor(badge) {
                 const text = badge.innerText.trim().toLowerCase();
-                // Rimuove le classi di colore esistenti
                 badge.classList.remove('bg-green-600', 'bg-orange-500', 'bg-red-600', 'bg-gray-500');
-
                 switch (text) {
-                    case 'alta':
-                        badge.classList.add('bg-green-600');
-                        break;
-                    case 'media':
-                        badge.classList.add('bg-orange-500');
-                        break;
-                    case 'bassa':
-                        badge.classList.add('bg-red-600');
-                        break;
-                    default:
-                        badge.classList.add('bg-gray-500'); // Colore di fallback
-                        break;
+                    case 'alta': badge.classList.add('bg-green-600'); break;
+                    case 'media': badge.classList.add('bg-orange-500'); break;
+                    case 'bassa': badge.classList.add('bg-red-600'); break;
+                    default: badge.classList.add('bg-gray-500'); break;
                 }
             }
 
-            /**
-             * Itera su tutti i badge e aggiorna il loro colore.
-             */
             function updateAllBadgeColors() {
                 priorityBadges.forEach(badge => updateBadgeColor(badge));
             }
 
-            // Aggiunge un listener a ogni badge per aggiornare il colore dopo la modifica.
             priorityBadges.forEach(badge => {
                 badge.addEventListener('blur', () => {
                     updateBadgeColor(badge);
-                    saveData(); // Salva i dati anche dopo aver cambiato il colore
+                    saveData();
                 });
             });
 
